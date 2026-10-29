@@ -60,8 +60,7 @@ def ohlcv_schema(
     It does not validate numerical relationships.
     """
 
-    return pa.schema(
-        [
+    fields: list[pa.Field] = [
             pa.field(
                 "security_id",
                 pa.string(),
@@ -112,13 +111,15 @@ def ohlcv_schema(
                 pa.string(),
                 nullable=False,
             ),
-        ],
-        metadata={
-            b"schema_name": b"ohlcv",
-            b"schema_version": b"1",
-            b"frequency": frequency.value.encode(),
-            b"price_adjustment": adjustment.value.encode(),
-            b"volume_unit": volume_unit.value.encode(),
-            b"timestamp_semantics": b"bar_end_utc",
-        },
-    )
+        ]
+    return pa.schema(
+        fields,
+            metadata={
+                b"schema_name": b"ohlcv",
+                b"schema_version": b"1",
+                b"frequency": frequency.value.encode(),
+                b"price_adjustment": adjustment.value.encode(),
+                b"volume_unit": volume_unit.value.encode(),
+                b"timestamp_semantics": b"bar_end_utc",
+            },
+        )
