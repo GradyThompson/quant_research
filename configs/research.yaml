@@ -1,0 +1,14 @@
+environment: research
+
+data:
+  path: data/research
+
+logging:
+  level: INFO
+
+backtesting:
+  initial_capital: 100000
+  commission_bps: 1.0
+
+execution:
+  enabled: false
