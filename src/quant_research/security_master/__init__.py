@@ -27,3 +27,10 @@ __all__ = [
     "SecurityNotFoundError",
     "AmbiguousSecurityError",
 ]
+
+from quant_research.security_master.persistence import (
+    SecurityMasterRepository,
+    SecurityMasterSnapshot,
+)
+
+__all__ += ["SecurityMasterRepository", "SecurityMasterSnapshot"]
