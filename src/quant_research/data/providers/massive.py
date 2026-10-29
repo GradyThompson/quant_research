@@ -6,6 +6,7 @@ aggregate API: the response uses session close as a lower bound; downstream
 research must apply an explicit post-close availability lag.
 """
 
+import os
 from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 from math import isfinite
@@ -14,6 +15,7 @@ from zoneinfo import ZoneInfo
 
 import exchange_calendars as xcals
 import pandas as pd
+from dotenv import load_dotenv
 
 from quant_research.data.providers.models import (
     BarRequest,
@@ -24,6 +26,7 @@ from quant_research.data.providers.models import (
     ProviderDataError,
 )
 from quant_research.data.schemas import BarFrequency
+from quant_research.paths import PROJECT_ROOT
 
 
 class _AggClient(Protocol):
@@ -39,14 +42,22 @@ class MassiveDailyProvider:
 
     def __init__(self, client: _AggClient | None = None) -> None:
         if client is None:
-            import os
-
             from massive import RESTClient
 
+            # Load environment variables from the project's .env file.
+            # Existing system environment variables take precedence.
+            load_dotenv(PROJECT_ROOT / ".env", override=False)
+
             api_key = os.environ.get("MASSIVE_API_KEY")
+
             if not api_key:
-                raise ProviderDataError("MASSIVE_API_KEY is not configured")
+                raise ProviderDataError(
+                    "MASSIVE_API_KEY is not configured. "
+                    "Set it in your environment or project .env file."
+                )
+
             client = RESTClient(api_key=api_key)
+
         self._client = client
         self._calendar = xcals.get_calendar("XNYS")
 
