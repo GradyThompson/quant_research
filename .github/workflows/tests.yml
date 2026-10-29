@@ -42,4 +42,4 @@ jobs:
 
       # 7. Run automated tests
       - name: Run tests
-        run: uv run --locked pytest tests/unit tests/integration
+        run: uv run --locked pytest tests
