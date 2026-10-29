@@ -6,6 +6,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError
 
 from quant_research.paths import CONFIG_DIR, resolve_project_path
+from quant_research.exceptions import ConfigurationError
 
 
 class Environment(StrEnum):
@@ -55,23 +56,36 @@ def load_config(environment: str = "development") -> AppConfig:
         selected_environment = Environment(environment)
     except ValueError as exc:
         valid = [item.value for item in Environment]
-        raise ValueError(f"Invalid environment: {environment}. Expected one of: {valid}") from exc
+
+        raise ConfigurationError(
+            f"Invalid environment: {environment}. Expected one of: {valid}"
+        ) from exc
 
     config_path = CONFIG_DIR / f"{selected_environment.value}.yaml"
 
-    with config_path.open(encoding="utf-8") as file:
-        raw_config = yaml.safe_load(file)
+    try:
+        with config_path.open(encoding="utf-8") as file:
+            raw_config = yaml.safe_load(file)
+
+    except FileNotFoundError as exc:
+        raise ConfigurationError(f"Configuration file not found: {config_path}") from exc
+
+    except OSError as exc:
+        raise ConfigurationError(f"Unable to read configuration file: {config_path}") from exc
+
+    except yaml.YAMLError as exc:
+        raise ConfigurationError(f"Invalid YAML in configuration file: {config_path}") from exc
 
     if not isinstance(raw_config, dict):
-        raise ValueError(f"Invalid configuration: {config_path}")
+        raise ConfigurationError(f"Invalid configuration structure: {config_path}")
 
     try:
         config = AppConfig.model_validate(raw_config)
     except ValidationError as exc:
-        raise ValueError(f"Configuration validation failed: {config_path}") from exc
+        raise ConfigurationError(f"Configuration validation failed: {config_path}") from exc
 
     if config.environment != selected_environment:
-        raise ValueError(
+        raise ConfigurationError(
             f"Environment mismatch in {config_path}: "
             f"expected {selected_environment.value}, "
             f"received {config.environment.value}"

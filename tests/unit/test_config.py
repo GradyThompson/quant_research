@@ -11,6 +11,7 @@ from quant_research.config import (
     load_config,
 )
 from quant_research.paths import PROJECT_ROOT
+from quant_research.exceptions import ConfigurationError
 
 
 def test_load_development_config():
@@ -37,7 +38,10 @@ def test_default_environment():
 
 
 def test_invalid_environment():
-    with pytest.raises(ValueError, match="Invalid environment"):
+    with pytest.raises(
+        ConfigurationError,
+        match="Invalid environment",
+    ):
         load_config("invalid")
 
 
@@ -127,7 +131,10 @@ def test_environment_mismatch(tmp_path, monkeypatch):
 
     monkeypatch.setattr(config_module, "CONFIG_DIR", tmp_path)
 
-    with pytest.raises(ValueError, match="Environment mismatch"):
+    with pytest.raises(
+        ConfigurationError,
+        match="Environment mismatch",
+    ):
         load_config("development")
 
 
@@ -142,3 +149,47 @@ def test_config_path_independent_of_working_directory(
     expected = PROJECT_ROOT / "data" / "research"
 
     assert config.data.path == expected
+
+
+def test_missing_configuration_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(config_module, "CONFIG_DIR", tmp_path)
+
+    with pytest.raises(
+        ConfigurationError,
+        match="Configuration file not found",
+    ):
+        load_config("development")
+
+
+def test_malformed_yaml(tmp_path, monkeypatch):
+    config_path = tmp_path / "development.yaml"
+
+    config_path.write_text(
+        "environment: [invalid",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(config_module, "CONFIG_DIR", tmp_path)
+
+    with pytest.raises(
+        ConfigurationError,
+        match="Invalid YAML",
+    ):
+        load_config("development")
+
+
+def test_invalid_yaml_structure(tmp_path, monkeypatch):
+    config_path = tmp_path / "development.yaml"
+
+    config_path.write_text(
+        "- development\n- research\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(config_module, "CONFIG_DIR", tmp_path)
+
+    with pytest.raises(
+        ConfigurationError,
+        match="Invalid configuration structure",
+    ):
+        load_config("development")
