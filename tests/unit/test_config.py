@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 import yaml
 from pydantic import ValidationError
@@ -10,8 +8,8 @@ from quant_research.config import (
     Environment,
     load_config,
 )
-from quant_research.paths import PROJECT_ROOT
 from quant_research.exceptions import ConfigurationError
+from quant_research.paths import PROJECT_ROOT
 
 
 def test_load_development_config():

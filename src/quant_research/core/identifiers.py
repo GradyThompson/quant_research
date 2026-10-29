@@ -4,7 +4,6 @@ import re
 from dataclasses import dataclass
 from uuid import UUID
 
-
 _SECURITY_ID_PATTERN = re.compile(r"^SEC-[0-9]{6,}$")
 
 _DATASET_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$")

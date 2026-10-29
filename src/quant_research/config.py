@@ -5,8 +5,8 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError
 
-from quant_research.paths import CONFIG_DIR, resolve_project_path
 from quant_research.exceptions import ConfigurationError
+from quant_research.paths import CONFIG_DIR, resolve_project_path
 
 
 class Environment(StrEnum):

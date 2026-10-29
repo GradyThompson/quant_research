@@ -3,9 +3,9 @@ import pytest
 from quant_research.exceptions import (
     ConfigurationError,
     DataError,
-    DataValidationError,
     DatasetIntegrityError,
     DatasetNotFoundError,
+    DataValidationError,
     QuantResearchError,
     ResearchError,
 )
