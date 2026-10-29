@@ -87,6 +87,7 @@ class IdentifierRecord:
     validity: ValidityPeriod
     recorded_at: datetime
     source: str
+    superseded_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.security_id, SecurityId):
@@ -98,6 +99,10 @@ class IdentifierRecord:
         if not isinstance(self.validity, ValidityPeriod):
             raise ValueError("validity must be a ValidityPeriod")
         _require_utc(self.recorded_at, "recorded_at")
+        if self.superseded_at is not None:
+            _require_utc(self.superseded_at, "superseded_at")
+            if self.superseded_at <= self.recorded_at:
+                raise ValueError("superseded_at must be later than recorded_at")
         if not self.source.strip():
             raise ValueError("source cannot be blank")
 
@@ -112,6 +117,7 @@ class ListingRecord:
     validity: ValidityPeriod
     recorded_at: datetime
     source: str
+    superseded_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.security_id, SecurityId):
@@ -128,5 +134,9 @@ class ListingRecord:
         if not isinstance(self.validity, ValidityPeriod):
             raise ValueError("validity must be a ValidityPeriod")
         _require_utc(self.recorded_at, "recorded_at")
+        if self.superseded_at is not None:
+            _require_utc(self.superseded_at, "superseded_at")
+            if self.superseded_at <= self.recorded_at:
+                raise ValueError("superseded_at must be later than recorded_at")
         if not self.source.strip():
             raise ValueError("source cannot be blank")

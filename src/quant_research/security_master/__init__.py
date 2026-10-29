@@ -1,4 +1,4 @@
-"""Public contracts for historical security identity."""
+"""Historical security master contracts and conservative resolution."""
 
 from quant_research.security_master.models import (
     IdentifierRecord,
@@ -8,6 +8,12 @@ from quant_research.security_master.models import (
     SecurityType,
     ValidityPeriod,
 )
+from quant_research.security_master.resolver import (
+    AmbiguousSecurityError,
+    SecurityNotFoundError,
+    SecurityResolutionError,
+    SecurityResolver,
+)
 
 __all__ = [
     "IdentifierRecord",
@@ -16,4 +22,8 @@ __all__ = [
     "SecurityRecord",
     "SecurityType",
     "ValidityPeriod",
+    "SecurityResolver",
+    "SecurityResolutionError",
+    "SecurityNotFoundError",
+    "AmbiguousSecurityError",
 ]
