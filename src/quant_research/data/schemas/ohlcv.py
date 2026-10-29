@@ -61,65 +61,65 @@ def ohlcv_schema(
     """
 
     fields: list[pa.Field] = [
-            pa.field(
-                "security_id",
-                pa.string(),
-                nullable=False,
-            ),
-            pa.field(
-                "timestamp",
-                pa.timestamp("us", tz="UTC"),
-                nullable=False,
-            ),
-            pa.field(
-                "available_at",
-                pa.timestamp("us", tz="UTC"),
-                nullable=False,
-            ),
-            pa.field(
-                "ingested_at",
-                pa.timestamp("us", tz="UTC"),
-                nullable=False,
-            ),
-            pa.field(
-                "open",
-                pa.float64(),
-                nullable=True,
-            ),
-            pa.field(
-                "high",
-                pa.float64(),
-                nullable=True,
-            ),
-            pa.field(
-                "low",
-                pa.float64(),
-                nullable=True,
-            ),
-            pa.field(
-                "close",
-                pa.float64(),
-                nullable=True,
-            ),
-            pa.field(
-                "volume",
-                pa.int64(),
-                nullable=True,
-            ),
-            pa.field(
-                "currency",
-                pa.string(),
-                nullable=False,
-            ),
-        ]
+        pa.field(
+            "security_id",
+            pa.string(),
+            nullable=False,
+        ),
+        pa.field(
+            "timestamp",
+            pa.timestamp("us", tz="UTC"),
+            nullable=False,
+        ),
+        pa.field(
+            "available_at",
+            pa.timestamp("us", tz="UTC"),
+            nullable=False,
+        ),
+        pa.field(
+            "ingested_at",
+            pa.timestamp("us", tz="UTC"),
+            nullable=False,
+        ),
+        pa.field(
+            "open",
+            pa.float64(),
+            nullable=True,
+        ),
+        pa.field(
+            "high",
+            pa.float64(),
+            nullable=True,
+        ),
+        pa.field(
+            "low",
+            pa.float64(),
+            nullable=True,
+        ),
+        pa.field(
+            "close",
+            pa.float64(),
+            nullable=True,
+        ),
+        pa.field(
+            "volume",
+            pa.int64(),
+            nullable=True,
+        ),
+        pa.field(
+            "currency",
+            pa.string(),
+            nullable=False,
+        ),
+    ]
     return pa.schema(
         fields,
-            metadata={
-                b"schema_name": b"ohlcv",
-                b"schema_version": b"1",
-                b"frequency": frequency.value.encode(),
-                b"price_adjustment": adjustment.value.encode(),
-                b"volume_unit": volume_unit.value.encode(),
-                b"timestamp_semantics": b"bar_end_utc",
-            },
-        )
+        metadata={
+            b"schema_name": b"ohlcv",
+            b"schema_version": b"1",
+            b"frequency": frequency.value.encode(),
+            b"price_adjustment": adjustment.value.encode(),
+            b"volume_unit": volume_unit.value.encode(),
+            b"timestamp_semantics": b"bar_end_utc",
+        },
+    )
