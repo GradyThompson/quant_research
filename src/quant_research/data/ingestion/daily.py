@@ -48,11 +48,11 @@ class DailyBarIngestor:
         self._publication_lag = publication_lag
 
     def ingest(
-    self,
-    request: BarRequest,
-    known_at: datetime,
-    dataset_id: DatasetId | None = None,
-) -> DailyIngestionResult:
+        self,
+        request: BarRequest,
+        known_at: datetime,
+        dataset_id: DatasetId | None = None,
+    ) -> DailyIngestionResult:
         if dataset_id is None:
             dataset_id = DatasetId("market.ohlcv.daily")
         if request.frequency != BarFrequency.DAILY:
