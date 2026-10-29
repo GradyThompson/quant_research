@@ -5,7 +5,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError
 
-from quant_research.paths import CONFIG_DIR
+from quant_research.paths import CONFIG_DIR, resolve_project_path
 
 
 class Environment(StrEnum):
@@ -76,5 +76,7 @@ def load_config(environment: str = "development") -> AppConfig:
             f"expected {selected_environment.value}, "
             f"received {config.environment.value}"
         )
+
+    config.data.path = resolve_project_path(config.data.path)
 
     return config

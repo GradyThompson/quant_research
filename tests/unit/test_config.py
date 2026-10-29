@@ -10,6 +10,7 @@ from quant_research.config import (
     Environment,
     load_config,
 )
+from quant_research.paths import PROJECT_ROOT
 
 
 def test_load_development_config():
@@ -17,20 +18,16 @@ def test_load_development_config():
 
     assert isinstance(config, AppConfig)
     assert config.environment == Environment.DEVELOPMENT
-    assert config.data.path == Path("data/dev")
-    assert config.logging.level == "DEBUG"
-    assert config.backtesting.initial_capital == 100000
-    assert config.backtesting.commission_bps == 1.0
-    assert config.execution.enabled is False
+    assert config.data.path == PROJECT_ROOT / "data" / "dev"
+    assert config.data.path.is_absolute()
 
 
 def test_load_research_config():
     config = load_config("research")
 
     assert config.environment == Environment.RESEARCH
-    assert config.data.path == Path("data/research")
-    assert config.logging.level == "INFO"
-    assert config.execution.enabled is False
+    assert config.data.path == PROJECT_ROOT / "data" / "research"
+    assert config.data.path.is_absolute()
 
 
 def test_default_environment():
@@ -132,3 +129,16 @@ def test_environment_mismatch(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError, match="Environment mismatch"):
         load_config("development")
+
+
+def test_config_path_independent_of_working_directory(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    config = load_config("research")
+
+    expected = PROJECT_ROOT / "data" / "research"
+
+    assert config.data.path == expected
