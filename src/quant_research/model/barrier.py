@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from math import isfinite
 from typing import Protocol
 
 import pyarrow as pa
@@ -34,6 +35,16 @@ class BarrierForecast:
     probability_upper_first: float
     probability_lower_first: float
     probability_neither: float
+
+    # Optional model-estimated reliability of this prediction, not an
+    # additional outcome probability. None means not supplied.
+    confidence: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.confidence is not None and (
+            not isfinite(self.confidence) or not 0.0 <= self.confidence <= 1.0
+        ):
+            raise ValueError("Forecast confidence must be finite and within [0, 1]")
 
 
 class BarrierModel(Protocol):
