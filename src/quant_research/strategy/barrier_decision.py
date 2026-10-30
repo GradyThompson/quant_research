@@ -23,10 +23,15 @@ class BarrierDecisionConfig:
 
     min_upper_probability: float = 0.6
     max_lower_probability: float = 0.35
+    min_confidence: float | None = None
 
     def __post_init__(self) -> None:
-        for value in (self.min_upper_probability, self.max_lower_probability):
-            if not isfinite(value) or not 0.0 <= value <= 1.0:
+        for value in (
+            self.min_upper_probability,
+            self.max_lower_probability,
+            self.min_confidence,
+        ):
+            if value is not None and (not isfinite(value) or not 0.0 <= value <= 1.0):
                 raise ValueError("Decision thresholds must be finite and within [0, 1]")
 
 
@@ -45,10 +50,10 @@ def decide_barrier_entry(
     has_open_position: bool = False,
     has_pending_entry: bool = False,
 ) -> BarrierEntryDecision:
-    """Enter only for acceptable upper/lower probabilities and no existing entry.
+    """Enter only when forecast thresholds pass and no entry is outstanding.
 
-    The policy cannot ensure a positive expected return: it does not yet account
-    for slippage, spreads, timeouts, or executable entry prices.
+    Confidence is ignored unless `min_confidence` is specified. When a
+    threshold is specified, missing confidence fails closed (SKIP).
     """
     probabilities = (
         forecast.probability_upper_first,
@@ -68,4 +73,9 @@ def decide_barrier_entry(
         return BarrierEntryDecision(BarrierAction.SKIP, "upper probability below threshold")
     if forecast.probability_lower_first > config.max_lower_probability:
         return BarrierEntryDecision(BarrierAction.SKIP, "lower probability above threshold")
+    if config.min_confidence is not None:
+        if forecast.confidence is None:
+            return BarrierEntryDecision(BarrierAction.SKIP, "forecast confidence missing")
+        if forecast.confidence < config.min_confidence:
+            return BarrierEntryDecision(BarrierAction.SKIP, "forecast confidence below threshold")
     return BarrierEntryDecision(BarrierAction.ENTER_LONG, "forecast passes entry thresholds")
