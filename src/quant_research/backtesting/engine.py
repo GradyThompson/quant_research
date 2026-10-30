@@ -80,6 +80,7 @@ class DailyBacktestEngine:
         instruments: Mapping[str, Instrument],
         initial_ledger: PortfolioLedger,
         policy: OrderPolicy,
+        availability: Mapping[tuple[str, datetime], datetime] | None = None,
     ) -> BacktestResult:
         """Execute pending orders on later bars and value at each bar close.
 
@@ -116,6 +117,29 @@ class DailyBacktestEngine:
                 raise ValueError("duplicate bar for security/timestamp")
             same_time[bar.security_id] = bar
 
+        # Default for synthetic bars: available immediately at bar end.
+        # Real stored data MUST supply explicit availability for every bar.
+        if availability is not None:
+            expected = {(bar.security_id, bar.timestamp) for bar in bars}
+            if set(availability) != expected:
+                raise ValueError("availability must contain exactly one time per bar")
+            for bar in bars:
+                available_at = availability[(bar.security_id, bar.timestamp)]
+                offset = available_at.utcoffset()
+                if offset is None:
+                    raise ValueError("availability times must be UTC aware")
+                if offset.total_seconds() != 0:
+                    raise ValueError("availability times must be UTC")
+                if available_at < bar.timestamp:
+                    raise ValueError("bar cannot be available before it ends")
+
+        if availability is not None:
+            timestamps = sorted(grouped)
+            for idx, timestamp in enumerate(timestamps[:-1]):
+                decision_time = max(availability[(sid, timestamp)] for sid in grouped[timestamp])
+                if decision_time >= timestamps[idx + 1]:
+                    raise ValueError("decision time must precede next daily bar end")
+
         ledger = initial_ledger
         marks: dict[str, Decimal] = {}
         pending: dict[str, HistoricalOrder] = {}
@@ -131,7 +155,6 @@ class DailyBacktestEngine:
                 execution_bar = current.get(order.security_id)
                 if execution_bar is None:
                     continue
-
                 fill = self.simulator.attempt_fill(order, execution_bar)
                 if fill is not None:
                     updated = apply_simulated_fills(ledger, (fill,), dict(instruments))
@@ -146,16 +169,22 @@ class DailyBacktestEngine:
             equity = mark_to_market_usd(ledger, marks)
             curve.append(EquityPoint(timestamp, equity))
 
-            context = BacktestContext(timestamp, dict(current), ledger)
+            decision_at = max(
+                (availability[(sid, timestamp)] if availability is not None else timestamp)
+                for sid in current
+            )
+            context = BacktestContext(decision_at, dict(current), ledger)
             new_orders = policy(context)
             for order in new_orders:
+                # A later day's market should never be processed before the
+                # previous decision can actually be made.
                 if order.order_id in seen_order_ids:
                     raise ValueError("duplicate order ID")
                 if order.security_id not in instruments:
                     raise ValueError("unknown order security")
-                if order.submitted_at < timestamp:
+                if order.submitted_at < decision_at:
                     raise ValueError("order submitted before its decision bar finished")
-                if order.submitted_at != timestamp:
+                if order.submitted_at != decision_at:
                     raise ValueError("v1 orders must be submitted at decision timestamp")
                 seen_order_ids.add(order.order_id)
                 pending[order.order_id] = order
