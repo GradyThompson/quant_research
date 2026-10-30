@@ -11,6 +11,7 @@ import json
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from quant_research.backtesting.engine import BacktestContext
 from quant_research.backtesting.execution import HistoricalOrder, OrderType, Side
@@ -41,7 +42,7 @@ def load_config(path: Path) -> dict[str, Any]:
 def run(config: dict[str, Any]) -> dict[str, Any]:
     store = ParquetDatasetStore(config["store_root"])
     pins = [
-        DatasetPin(DatasetId(entry["dataset_id"]), DatasetVersion(entry["version"]))
+        DatasetPin(DatasetId(entry["dataset_id"]), DatasetVersion(UUID(entry["version"])))
         for entry in config["datasets"]
     ]
     instruments: dict[str, Instrument] = {}
