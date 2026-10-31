@@ -12,7 +12,10 @@ import pandas as pd
 from run_historical_rolling_barrier import load_private_rolling_model
 
 from quant_research.backtesting.barrier_alignment_audit import audit_barrier_alignment
-from quant_research.backtesting.barrier_calibration import evaluate_barrier_calibration
+from quant_research.backtesting.barrier_calibration import (
+    ReferenceConvention,
+    evaluate_barrier_calibration,
+)
 from quant_research.backtesting.forecast_diagnostics import (
     RecordingRollingBarrierModel,
     analyze_forecasts,
@@ -59,6 +62,17 @@ def main() -> None:
     parser.add_argument("--calibration", action="store_true", help="Score barrier forecasts")
     parser.add_argument(
         "--alignment-audit", action="store_true", help="Audit forecast/reference timing"
+    )
+    parser.add_argument(
+        "--calibration-reference",
+        choices=[option.value for option in ReferenceConvention],
+        default=ReferenceConvention.EXECUTABLE.value,
+        help="Reference for primary calibration (default: executable)",
+    )
+    parser.add_argument(
+        "--compare-calibration-references",
+        action="store_true",
+        help="Report both executable and historical legacy calibration labels",
     )
     args = parser.parse_args()
 
@@ -151,15 +165,19 @@ def main() -> None:
         for threshold, count in diagnostics.threshold_counts.items():
             print(f"  {threshold}: {count}")
         print("NOTE: threshold counts are signal diagnostics, not simulated trades")
-    if args.calibration:
+    if args.calibration or args.compare_calibration_references:
+        reference = ReferenceConvention(args.calibration_reference)
         scores = evaluate_barrier_calibration(
             forecasts=recorder.forecasts,
             bars=bars,
             upper_barrier_pct=args.upper_pct,
             lower_barrier_pct=args.lower_pct,
             max_holding_minutes=args.max_holding_minutes,
+            reference_convention=reference,
         )
-        print("--- Historical barrier calibration (future open reference, no fills) ---")
+        print(
+            f"--- Historical barrier calibration ({reference.value} open reference, no fills) ---"
+        )
         print(f"Total forecasts: {scores.total_forecasts}")
         print(f"Scored: {scores.scored}")
         print(f"Ambiguous excluded: {scores.ambiguous}")
@@ -174,6 +192,28 @@ def main() -> None:
         for bucket, metrics in scores.confidence_buckets.items():
             print(f"  {bucket}: {metrics}")
         print("NOTE: overlapping forecast windows are correlated; no uncertainty estimates")
+        if args.compare_calibration_references:
+            other = (
+                ReferenceConvention.LEGACY
+                if reference is ReferenceConvention.EXECUTABLE
+                else ReferenceConvention.EXECUTABLE
+            )
+            comparison = evaluate_barrier_calibration(
+                forecasts=recorder.forecasts,
+                bars=bars,
+                upper_barrier_pct=args.upper_pct,
+                lower_barrier_pct=args.lower_pct,
+                max_holding_minutes=args.max_holding_minutes,
+                reference_convention=other,
+            )
+            print(f"--- Comparison calibration ({other.value}) ---")
+            print(f"Scored: {comparison.scored}")
+            print(f"Ambiguous: {comparison.ambiguous}")
+            print(f"Incomplete: {comparison.incomplete}")
+            print(f"Multiclass Brier: {comparison.brier_score}")
+            print(f"Multiclass log loss: {comparison.log_loss}")
+            print(f"Observed outcome counts: {comparison.observed}")
+            print("NOTE: differences reflect reference conventions, not model retraining")
     if args.alignment_audit:
         audit = audit_barrier_alignment(forecasts=recorder.forecasts, bars=bars)
         print("--- Forecast-to-label alignment audit ---")
