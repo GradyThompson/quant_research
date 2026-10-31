@@ -11,6 +11,11 @@ from statistics import mean
 
 import pyarrow as pa
 
+from quant_research.backtesting.calibration_benchmarks import (
+    BenchmarkScores,
+    score_retrospective_frequency_baseline,
+    score_uniform_baseline,
+)
 from quant_research.labels.barrier import BarrierOutcome, label_barrier_event
 from quant_research.model.barrier import BarrierForecast
 
@@ -31,6 +36,8 @@ class CalibrationResult:
     observed: dict[str, int]
     confidence_buckets: dict[str, tuple[int, float]]
     upper_probability_buckets: dict[str, tuple[int, float, float]]
+    uniform_baseline: BenchmarkScores
+    retrospective_frequency_baseline: BenchmarkScores
 
 
 def _bucket(value: float) -> str:
@@ -70,6 +77,7 @@ def evaluate_barrier_calibration(
     upper_groups: dict[str, list[tuple[float, int]]] = {}
     briers: list[float] = []
     losses: list[float] = []
+    actual_classes: list[int] = []
     ambiguous = incomplete = 0
 
     for forecast in forecasts:
@@ -120,6 +128,7 @@ def evaluate_barrier_calibration(
         )
         true_index = outcomes.index(label.outcome)
         observed[label.outcome.value] += 1
+        actual_classes.append(true_index)
         briers.append(
             sum((p - float(i == true_index)) ** 2 for i, p in enumerate(probabilities)) / 3
         )
@@ -134,6 +143,8 @@ def evaluate_barrier_calibration(
 
     return CalibrationResult(
         total_forecasts=len(forecasts),
+        uniform_baseline=score_uniform_baseline(actual_classes),
+        retrospective_frequency_baseline=score_retrospective_frequency_baseline(actual_classes),
         scored=len(briers),
         ambiguous=ambiguous,
         incomplete=incomplete,

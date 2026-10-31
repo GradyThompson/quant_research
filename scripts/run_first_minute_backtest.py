@@ -61,6 +61,11 @@ def main() -> None:
     )
     parser.add_argument("--calibration", action="store_true", help="Score barrier forecasts")
     parser.add_argument(
+        "--benchmarks",
+        action="store_true",
+        help="Compare with uniform and retrospective frequency baselines",
+    )
+    parser.add_argument(
         "--alignment-audit", action="store_true", help="Audit forecast/reference timing"
     )
     parser.add_argument(
@@ -165,7 +170,7 @@ def main() -> None:
         for threshold, count in diagnostics.threshold_counts.items():
             print(f"  {threshold}: {count}")
         print("NOTE: threshold counts are signal diagnostics, not simulated trades")
-    if args.calibration or args.compare_calibration_references:
+    if args.calibration or args.compare_calibration_references or args.benchmarks:
         reference = ReferenceConvention(args.calibration_reference)
         scores = evaluate_barrier_calibration(
             forecasts=recorder.forecasts,
@@ -192,6 +197,31 @@ def main() -> None:
         for bucket, metrics in scores.confidence_buckets.items():
             print(f"  {bucket}: {metrics}")
         print("NOTE: overlapping forecast windows are correlated; no uncertainty estimates")
+        if args.benchmarks:
+            print("--- Calibration benchmarks (identical scored forecasts) ---")
+            print(f"Model: Brier={scores.brier_score} log_loss={scores.log_loss}")
+            for name, baseline in (
+                ("Uniform", scores.uniform_baseline),
+                (
+                    "Retrospective frequencies (IN-SAMPLE ORACLE)",
+                    scores.retrospective_frequency_baseline,
+                ),
+            ):
+                print(
+                    f"{name}: n={baseline.count} probabilities={baseline.probabilities} "
+                    f"Brier={baseline.brier_score} log_loss={baseline.log_loss}"
+                )
+                if scores.brier_score is not None and baseline.brier_score is not None:
+                    print(
+                        f"  Brier improvement vs {name}: {baseline.brier_score - scores.brier_score:+.6f}"
+                    )
+                if scores.log_loss is not None and baseline.log_loss is not None:
+                    print(
+                        f"  Log-loss improvement vs {name}: {baseline.log_loss - scores.log_loss:+.6f}"
+                    )
+            print(
+                "NOTE: retrospective frequencies use this evaluation session's outcomes; not an out-of-sample benchmark"
+            )
         if args.compare_calibration_references:
             other = (
                 ReferenceConvention.LEGACY
