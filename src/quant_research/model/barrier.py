@@ -1,4 +1,4 @@
-"""Contracts for private intraday barrier prediction models."""
+"""Contracts for public and pluggable intraday barrier prediction models."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class BarrierForecast:
 
 
 class BarrierModel(Protocol):
-    """Interface implemented by a private prediction model."""
+    """Interface implemented by a barrier prediction model."""
 
     def predict(
         self,

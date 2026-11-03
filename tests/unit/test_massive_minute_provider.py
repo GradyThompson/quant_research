@@ -144,3 +144,21 @@ def test_wraps_vendor_errors() -> None:
 
     with pytest.raises(ProviderDataError, match="request failed"):
         MassiveMinuteProvider(client=BrokenClient()).fetch_bars(request())
+
+
+def test_single_session_vendor_query_does_not_fetch_adjacent_days() -> None:
+    from datetime import timedelta
+
+    single = BarRequest(
+        instrument=ProviderInstrument("QQQ", InstrumentKind.TICKER, "XNAS"),
+        frequency=BarFrequency.MINUTE,
+        period=TimeRange(
+            datetime(2025, 1, 10, 14, 30, tzinfo=UTC),
+            datetime(2025, 1, 10, 21, 0, tzinfo=UTC) + timedelta(microseconds=1),
+        ),
+    )
+    client = FakeClient([])
+    MassiveMinuteProvider(client=client).fetch_bars(single)
+    assert client.kwargs is not None
+    assert client.kwargs["from_"] == "2025-01-10"
+    assert client.kwargs["to"] == "2025-01-10"

@@ -32,10 +32,12 @@ class MassiveMinuteProvider(MassiveDailyProvider):
         if request.instrument.mic not in (None, "XNYS", "XNAS"):
             raise ProviderCapabilityError("Only US NYSE/Nasdaq listings are supported")
 
-        # Vendor API filters by bar START/date, but our request filters by END.
-        # Extend the vendor range so a boundary minute cannot be lost.
-        start_date = (request.period.start.astimezone(UTC) - timedelta(days=1)).date()
-        end_date = (request.period.end.astimezone(UTC) + timedelta(days=1)).date()
+        # Vendor filters by minute START/date, whereas TimeRange filters by
+        # minute END. One minute of padding is sufficient at UTC midnight.
+        # Do NOT request adjacent sessions for a single-session research read:
+        # an adjacent session might be part of a protected final holdout.
+        start_date = (request.period.start.astimezone(UTC) - timedelta(minutes=1)).date()
+        end_date = request.period.end.astimezone(UTC).date()
         try:
             raw = self._client.list_aggs(
                 ticker=request.instrument.identifier,
