@@ -37,13 +37,48 @@ The example evaluates the probability of hitting an upper or lower 0.5% price ba
 | 30 | 0.355498 | 0.354787 | 0.289715 |
 | 60 | 0.467121 | 0.466956 | 0.065922 |
 
-## Selected research findings
+## Selected empirical results
 
-- Development experiments on fixed-stock opening-range breakouts and cross-sectional high-relative-volume strategies did not establish profitability at an assumed 12 basis points of round-trip costs. See the [research motivation and subsequent hypothesis](docs/p4_6_late_session_momentum.md).
-- In a small AAPL validation sample, 39 of 50 evaluated forecasts timed out. This exposed the inadequacy of a binary upper-touch label as a proxy for positive net returns. See the [economic target and model-selection note](docs/maintenance/next_model_decision.md).
-- The [historical instrument and corporate-action audit](docs/p5_a_3_reference_action_reconciliation.md) investigates potentially spurious residual-short performance caused by security classification, share changes and log-return accounting. It is an audit, not a corrected strategy backtest.
+**Development data only; not independent holdout evidence.** A cross-sectional
+three-outcome barrier forecasting experiment evaluated 42,528 predictions
+per model across 247 sessions (January 2–December 23, 2024), using 13
+expanding chronological folds and a one-session embargo. The target is
+upper +0.5%, lower −2.0%, or neither within 60 minutes of the entry.
 
-See [results and reproducibility notes](results/README.md) for the scope of these findings. Raw market data and generated empirical reports are not distributed here. The analytical demonstration is independently runnable, but the documented market findings have not been independently reproduced by the demo.
+| Model | Brier score ↓ | Log loss ↓ | Relative Brier reduction |
+| --- | ---: | ---: | ---: |
+| Logistic regression | 0.14974 | 0.69704 | 21.66% |
+| Decomposed LightGBM | 0.15040 | 0.70163 | 21.31% |
+| Direct LightGBM | 0.15050 | 0.70192 | 21.26% |
+| Fixed ensemble | 0.15653 | 0.72808 | 18.11% |
+| Ratio correction | 0.18503 | 0.98392 | 3.19% |
+| Mathematical baseline | 0.19113 | 0.97332 | 0.00% |
+
+Regularized logistic regression achieved the lowest Brier score and log loss
+among the six tested models, reducing Brier score by approximately 21.7%
+relative to the analytical baseline (morning realized volatility, not the
+full seasonal M2.5 model). This did not translate into positive net price
+proxies at any of the tested additional cost levels.
+
+![Transaction-cost sensitivity](results/cost_sensitivity.png)
+
+A separate four-instrument analytical validation study illustrates upper-touch
+calibration using price-martingale drift and seasonal close-based volatility,
+symmetric 0.2% barriers, and a five-minute horizon. It covers ten development
+sessions, December 10–23, 2024. Marker size increases with bin count.
+
+![Upper-touch calibration](results/upper_touch_calibration.png)
+
+An additional [instrument-identity and corporate-action audit](docs/p5_a_3_reference_action_reconciliation.md)
+found that the original +102.43 bps log-return proxy per entry session
+contrasted with a −0.20 bps arithmetic proxy per original entry session
+after retrospective reconciliation of the verified common-stock subset.
+This is a diagnostic, not an apples-to-apples strategy comparison or a
+corrected backtest.
+
+See [detailed empirical results](results/README.md) for assumptions,
+uncertainty, limitations, and aggregate figure inputs. No raw data,
+individual trades, or predictions are distributed in the results section.
 
 ## Mathematical and experimental methodology
 
