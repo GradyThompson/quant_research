@@ -4,7 +4,7 @@
 [project]
 name = "quant-research"
 version = "0.1.0"
-description = "Add your description here"
+description = "Stochastic price modeling, numerical first-passage methods, and point-in-time quantitative research."
 readme = "README.md"
 authors = [
     { name = "gradythompson", email = "grady_thompson@outlook.com" }
@@ -28,9 +28,6 @@ dependencies = [
     "scikit-learn>=1.7,<2",
     "scipy>=1.17.1",
 ]
-
-[project.scripts]
-quant-research = "quant_research:main"
 
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]

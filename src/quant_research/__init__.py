@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from quant-research!")
+"""Stochastic modeling and point-in-time quantitative research."""

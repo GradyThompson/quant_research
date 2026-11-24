@@ -2,40 +2,28 @@
 
 **Research only. No broker integration, no claims of profitability, and no final-holdout access.**
 
-This patch applies on top of your P5-A/P4.5 repository. It adds three source/model components, two CLI scripts, and 18 tests. The models require LightGBM and scikit-learn; both are open-source libraries (no data subscription required).
+This experiment compares analytical and learned three-outcome first-passage models. It uses LightGBM and scikit-learn, included in the locked environment.
 
-## Before installing
+## Setup
 
-The script **requires** these prior installed repository utilities:
-
-- `quant_research.data.ingestion.minute_market_summary` (P4.5.1 / P5)
-- `quant_research.data.ingestion.minute_research_extract` (P4.4.3)
-- `quant_research.model.opening_range_history.protected_research_days`
-- `quant_research.model.first_passage.first_passage_probabilities`
-
-They are deliberately reused, not forked.
-
-## Installation
+From the repository root:
 
 ```bash
-cd ~/Documents/investing/quant_research
-unzip -o ~/Downloads/P6_Integrated_ML_Barrier_Research.zip -d .
-uv add 'lightgbm>=4.6.0,<5' 'scikit-learn>=1.7,<2'
+uv sync --locked
 ```
 
-`uv add` updates both `pyproject.toml` and `uv.lock`, avoiding overwriting the current version of your project file. Existing source files are not replaced.
+The dataset builder reuses `minute_market_summary`, `minute_research_extract`, `protected_research_days` and `first_passage_probabilities` from the existing package. Historical experiments require the relevant local market data and vendor access; the libraries themselves do not require a data subscription.
 
 ## Verification
 
 ```bash
-uv run ruff format
-uv run ruff check . --fix
-uv run ruff format --check .
-uv run mypy src/quant_research
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked mypy src/quant_research
 ```
 
 ```bash
-uv run pytest
+uv run --locked pytest
 ```
 
 ## Build a reusable dataset (one-time heavy operation)

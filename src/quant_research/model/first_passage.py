@@ -1,16 +1,18 @@
-"""Finite-horizon first-passage probabilities for driftless log-price Brownian motion.
+"""Finite-horizon first-passage probabilities for log-price Brownian motion.
 
-Let X(t) = log(P(t) / P(0)) = sigma * W(t), with sigma measured per
-square-root minute. The log barriers are log(1 + upper_pct) and
-log(1 - lower_pct). No model parameters are fitted here.
+Let X(t) = log(P(t) / P(0)) = mu*t + sigma*W(t), with sigma measured
+per square-root minute. The log barriers are log(1 + upper_pct) and
+log(1 - lower_pct). The log_zero convention sets mu = 0; price_zero
+sets mu = -sigma**2 / 2, making the price a martingale. No model
+parameters are fitted here.
 
 The solution uses the method of images for short normalized horizons and
-an absorbing-boundary Fourier series for longer horizons. Both solve the
-same continuous-path diffusion problem; they are not approximations from
-sampling minute closes.
+an absorbing-boundary Fourier series for longer horizons, with drift
+corrections for price_zero. Both solve the continuous-path diffusion
+problem; they are not approximations from sampling minute closes.
 
-Limitations: constant volatility, zero *log-price* drift, continuous paths,
-and no jumps. Zero log drift is NOT the same as zero expected price return.
+Limitations: constant volatility, continuous paths, and no jumps. Zero
+log drift is NOT the same as zero expected price return.
 """
 
 from __future__ import annotations

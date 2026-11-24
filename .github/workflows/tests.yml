@@ -40,6 +40,12 @@ jobs:
       - name: Format check
         run: uv run --locked ruff format --check .
 
+      - name: Run offline demonstration
+        run: uv run --locked python examples/first_passage_demo.py
+
+      - name: Type checking
+        run: uv run --locked mypy src/quant_research
+
       # 7. Run automated tests
       - name: Run tests
         run: uv run --locked pytest tests
